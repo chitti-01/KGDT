@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model LR {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  lrNumber         Int      @unique
+  bookingDate      DateTime @default(now())
+  deliveryDate     DateTime?
+  billingType      String   // Paid, ToPay, TBB, FOC
+  
+  consignorId      String   @db.ObjectId
+  consigneeId      String   @db.ObjectId
+  consignor        Customer @relation("ConsignorLRs", fields: [consignorId], references: [id])
+  consignee        Customer @relation("ConsigneeLRs", fields: [consigneeId], references: [id])
+  
+  fromLocation     String
+  toLocation       String
+  
+  goodsDescription String
+  quantity         Int?
+  weight           Float?
+  
+  freightAmount    Float    @default(0)
+  otherCharges     Float    @default(0)
+  gstRate          Float    @default(5)
+  cgst             Float    @default(0)
+  sgst             Float    @default(0)
+  igst             Float    @default(0)
+  totalAmount      Float    @default(0)
+  
+  status           String   @default("Created") // Created, Delivered, Cancelled
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Customer {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String   @unique
+  gstNumber    String?
+  address      String?
+  phone        String?
+  
+  consignorLRs LR[] @relation("ConsignorLRs")
+  consigneeLRs LR[] @relation("ConsigneeLRs")
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Route {
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
+  from String
+  to   String
+  
+  @@unique([from, to])
+}
+
+model GoodType {
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
+  name String @unique
+}
