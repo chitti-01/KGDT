@@ -62,12 +62,16 @@ export async function POST(request: NextRequest) {
         let consignor = await prisma.customer.findUnique({ where: { name: consignorName } });
         if (!consignor) {
             consignor = await prisma.customer.create({ data: { name: consignorName, gstNumber: consignorGst || null } });
+        } else if (consignorGst && consignor.gstNumber !== consignorGst) {
+            consignor = await prisma.customer.update({ where: { id: consignor.id }, data: { gstNumber: consignorGst } });
         }
 
         // Logic: Get or create consignee
         let consignee = await prisma.customer.findUnique({ where: { name: consigneeName } });
         if (!consignee) {
             consignee = await prisma.customer.create({ data: { name: consigneeName, gstNumber: consigneeGst || null } });
+        } else if (consigneeGst && consignee.gstNumber !== consigneeGst) {
+            consignee = await prisma.customer.update({ where: { id: consignee.id }, data: { gstNumber: consigneeGst } });
         }
 
         // Capture route and goods to build history

@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 
 export function exportLRsToExcel(lrs: any[]) {
     const data = lrs.map(lr => ({
@@ -7,8 +7,9 @@ export function exportLRsToExcel(lrs: any[]) {
         'Booking Date': format(new Date(lr.bookingDate), 'dd-MM-yyyy'),
         'Consignor': lr.consignor?.name,
         'Consignee': lr.consignee?.name,
-        'From': lr.fromLocation,
-        'To': lr.toLocation,
+        'From': 'Vijayawada',
+        'To': 'Eluru',
+        'Est. Delivery': format(addDays(new Date(lr.bookingDate), 1), 'dd-MM-yyyy'),
         'Goods': lr.goodsDescription,
         'Total Amount': lr.totalAmount,
         'Status': lr.status

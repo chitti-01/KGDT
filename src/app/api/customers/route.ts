@@ -5,13 +5,25 @@ export async function GET(request: NextRequest) {
     try {
         const searchParams = request.nextUrl.searchParams;
         const query = searchParams.get('q');
+        const gstQuery = searchParams.get('gst');
 
         let customers;
-        if (query) {
+        if (gstQuery) {
+            customers = await prisma.customer.findMany({
+                where: {
+                    gstNumber: {
+                        contains: gstQuery,
+                        mode: 'insensitive',
+                    }
+                },
+                take: 10,
+            });
+        } else if (query) {
             customers = await prisma.customer.findMany({
                 where: {
                     name: {
                         contains: query,
+                        mode: 'insensitive',
                     }
                 },
                 take: 10,

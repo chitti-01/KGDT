@@ -28,7 +28,7 @@ model LR {
   
   freightAmount    Float    @default(0)
   otherCharges     Float    @default(0)
-  gstRate          Float    @default(5)
+  gstRate          Float    @default(0)
   cgst             Float    @default(0)
   sgst             Float    @default(0)
   igst             Float    @default(0)

@@ -1,9 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, FileText, Download, Printer } from 'lucide-react'
-import { generateLRPdf } from '@/utils/pdfGenerator'
-import { exportLRsToExcel } from '@/utils/excelExport'
+import { Search, FileText, Download, Printer, Edit2 } from 'lucide-react'
+import { generateLRPdf, generateMultipleLRPdf, generate3LRsPerPagePdf } from '@/utils/pdfGenerator'
 
 type LR = {
     id: number;
@@ -20,6 +19,8 @@ type LR = {
 export default function LRHistoryPage() {
     const [lrs, setLrs] = useState<LR[]>([])
     const [searchQuery, setSearchQuery] = useState('')
+    const [startDate, setStartDate] = useState('')
+    const [endDate, setEndDate] = useState('')
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
@@ -52,9 +53,14 @@ export default function LRHistoryPage() {
                     <h2 className="title">LR History</h2>
                     <p className="subtitle">View and manage all your logistic receipts.</p>
                 </div>
-                <button onClick={() => exportLRsToExcel(lrs)} className="btn" style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--foreground)', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: 'var(--shadow-sm)' }}>
-                    <Download size={18} color="var(--primary)" /> Export to Excel
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button onClick={() => generateMultipleLRPdf(lrs, startDate, endDate)} className="btn" style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--foreground)', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: 'var(--shadow-sm)' }}>
+                        <Printer size={18} color="var(--primary)" /> Summary PDF
+                    </button>
+                    <button onClick={() => generate3LRsPerPagePdf(lrs, startDate, endDate)} className="btn" style={{ background: 'var(--primary)', border: 'none', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: 'var(--shadow-sm)' }}>
+                        <Download size={18} color="white" /> Format 3-LRs
+                    </button>
+                </div>
             </header>
 
             <div className="card glass" style={{ marginBottom: '2.5rem', padding: '1.5rem' }}>
@@ -70,7 +76,12 @@ export default function LRHistoryPage() {
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
-                    <button type="submit" className="btn-primary" style={{ padding: '0.875rem 2rem' }}>Search Records</button>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <input type="date" className="input" style={{ width: 'auto', padding: '0.875rem' }} value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                        <span style={{ color: 'var(--secondary)', fontWeight: 500 }}>to</span>
+                        <input type="date" className="input" style={{ width: 'auto', padding: '0.875rem' }} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                    </div>
+                    <button type="submit" className="btn-primary" style={{ padding: '0.875rem 2rem' }}>Search / Filter</button>
                 </form>
             </div>
 
@@ -118,9 +129,9 @@ export default function LRHistoryPage() {
                                         <td style={{ padding: '1.25rem 1rem', fontWeight: '500' }}>{lr.consignee?.name}</td>
                                         <td style={{ padding: '1.25rem 1rem' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
-                                                <span>{lr.fromLocation}</span>
+                                                <span>Vijayawada</span>
                                                 <span style={{ color: 'var(--secondary)' }}>→</span>
-                                                <span>{lr.toLocation}</span>
+                                                <span>Eluru</span>
                                             </div>
                                         </td>
                                         <td style={{ padding: '1.25rem 1rem', fontWeight: '700', color: 'var(--foreground)' }}>₹{lr.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -130,9 +141,14 @@ export default function LRHistoryPage() {
                                             </span>
                                         </td>
                                         <td style={{ padding: '1.25rem 1rem', textAlign: 'right' }}>
-                                            <button onClick={() => generateLRPdf(lr)} className="btn" style={{ background: 'transparent', border: '1px solid var(--border)', padding: '0.5rem 1rem', fontSize: '0.875rem', borderRadius: '2rem', display: 'inline-flex' }}>
-                                                <Printer size={16} style={{ marginRight: '0.5rem' }} /> Print PDF
-                                            </button>
+                                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                                <button onClick={() => window.location.href = `/edit-lr/${lr.id}`} className="btn" style={{ background: 'transparent', border: '1px solid var(--border)', padding: '0.5rem 1rem', fontSize: '0.875rem', borderRadius: '2rem', display: 'inline-flex', alignItems: 'center' }}>
+                                                    <Edit2 size={16} style={{ marginRight: '0.5rem' }} /> Edit
+                                                </button>
+                                                <button onClick={() => generateLRPdf(lr)} className="btn" style={{ background: 'transparent', border: '1px solid var(--border)', padding: '0.5rem 1rem', fontSize: '0.875rem', borderRadius: '2rem', display: 'inline-flex', alignItems: 'center' }}>
+                                                    <Printer size={16} style={{ marginRight: '0.5rem' }} /> Print PDF
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))

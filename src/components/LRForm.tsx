@@ -1,48 +1,120 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { format } from 'date-fns'
+import { addDays, format } from 'date-fns'
 
-export default function LRForm() {
+export default function LRForm({ initialData, lrId }: { initialData?: any, lrId?: string }) {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
-    const [formData, setFormData] = useState({
+    const [consignorSuggestions, setConsignorSuggestions] = useState<any[]>([])
+    const [showConsignorSuggestions, setShowConsignorSuggestions] = useState(false)
+    const [consigneeSuggestions, setConsigneeSuggestions] = useState<any[]>([])
+    const [showConsigneeSuggestions, setShowConsigneeSuggestions] = useState(false)
+    const consignorRef = useRef<HTMLDivElement>(null)
+    const consigneeRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (consignorRef.current && !consignorRef.current.contains(event.target as Node)) {
+                setShowConsignorSuggestions(false)
+            }
+            if (consigneeRef.current && !consigneeRef.current.contains(event.target as Node)) {
+                setShowConsigneeSuggestions(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [])
+
+    const fetchSuggestions = async (query: string, type: 'consignor' | 'consignee', searchBy: 'gst' | 'name' = 'gst') => {
+        if (query.length < 2) {
+            if (type === 'consignor') {
+                setConsignorSuggestions([])
+                setShowConsignorSuggestions(false)
+            } else {
+                setConsigneeSuggestions([])
+                setShowConsigneeSuggestions(false)
+            }
+            return
+        }
+
+        try {
+            const url = searchBy === 'gst' ? `/api/customers?gst=${query}` : `/api/customers?q=${query}`
+            const res = await fetch(url)
+            if (res.ok) {
+                const data = await res.json()
+                if (type === 'consignor') {
+                    setConsignorSuggestions(data)
+                    setShowConsignorSuggestions(data.length > 0)
+                } else {
+                    setConsigneeSuggestions(data)
+                    setShowConsigneeSuggestions(data.length > 0)
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching suggestions:', error)
+        }
+    }
+
+    const handleSuggestionSelect = (customer: any, type: 'consignor' | 'consignee') => {
+        setFormData((prev: any) => ({
+            ...prev,
+            [type === 'consignor' ? 'consignorName' : 'consigneeName']: customer.name || '',
+            [type === 'consignor' ? 'consignorGst' : 'consigneeGst']: customer.gstNumber || '',
+        }))
+        if (type === 'consignor') {
+            setShowConsignorSuggestions(false)
+        } else {
+            setShowConsigneeSuggestions(false)
+        }
+    }
+
+    const [formData, setFormData] = useState(initialData || {
         bookingDate: format(new Date(), 'yyyy-MM-dd'),
-        deliveryDate: '',
+        deliveryDate: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
         billingType: 'ToPay',
         consignorName: '',
         consignorGst: '',
         consigneeName: '',
         consigneeGst: '',
-        fromLocation: '',
-        toLocation: '',
+        fromLocation: 'Vijayawada',
+        toLocation: 'Eluru',
         goodsDescription: '',
         quantity: '',
         weight: '',
         freightAmount: '',
         otherCharges: '',
-        gstRate: '5',
+        gstRate: '0',
     })
 
     // Suggestion logic can be expanded. Here we simulate basic handling.
     // In a full implementation, these would fetch from the APIs dynamically on typed input.
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }))
+        let { name, value } = e.target;
+        if (name === 'consignorGst' || name === 'consigneeGst') {
+            value = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            fetchSuggestions(value, name === 'consignorGst' ? 'consignor' : 'consignee', 'gst');
+        } else if (name === 'consignorName' || name === 'consigneeName') {
+            fetchSuggestions(value, name === 'consignorName' ? 'consignor' : 'consignee', 'name');
+        }
+        setFormData((prev: any) => ({ ...prev, [name]: value }))
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
         try {
-            const res = await fetch('/api/lr', {
-                method: 'POST',
+            const url = lrId ? `/api/lr/${lrId}` : '/api/lr'
+            const method = lrId ? 'PUT' : 'POST'
+
+            const res = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
             })
-            if (!res.ok) throw new Error('Failed to create LR')
+            if (!res.ok) throw new Error(lrId ? 'Failed to update LR' : 'Failed to create LR')
 
             const newLr = await res.json()
 
@@ -62,8 +134,8 @@ export default function LRForm() {
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
                 </div>
                 <div>
-                   <h4 style="margin:0; font-weight:600; font-size:1rem;">LR Created</h4>
-                   <p style="margin:0; color:var(--secondary); font-size:0.875rem;">LR Number: <strong>${newLr.lrNumber}</strong> generated successfully.</p>
+                   <h4 style="margin:0; font-weight:600; font-size:1rem;">LR ${lrId ? 'Updated' : 'Created'}</h4>
+                   <p style="margin:0; color:var(--secondary); font-size:0.875rem;">LR Number: <strong>${newLr.lrNumber}</strong> ${lrId ? 'updated' : 'generated'} successfully.</p>
                 </div>
             `;
             document.body.appendChild(toast);
@@ -100,7 +172,7 @@ export default function LRForm() {
                     </div>
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>Delivery Date (Est)</label>
-                        <input type="date" name="deliveryDate" value={formData.deliveryDate} onChange={handleChange} className="input" />
+                        <input type="date" name="deliveryDate" value={formData.deliveryDate} onChange={handleChange} className="input" readOnly style={{ backgroundColor: 'var(--bg-muted)', cursor: 'not-allowed' }} />
                     </div>
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>Billing Type</label>
@@ -115,37 +187,57 @@ export default function LRForm() {
             </div>
 
             {/* Customer Info */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
-                <div className="card glass">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem', position: 'relative', zIndex: 50 }}>
+                <div className="card glass" style={{ overflow: 'visible', zIndex: 52, transform: 'none' }}>
                     <h3 style={{ marginBottom: '1.5rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }}></span>
                         Consignor Details
                     </h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                        <div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }} ref={consignorRef}>
+                        <div style={{ position: 'relative' }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>Consignor Name</label>
-                            <input type="text" name="consignorName" value={formData.consignorName} onChange={handleChange} className="input" placeholder="e.g. Acme Corp" required disabled={loading} />
+                            <input type="text" name="consignorName" value={formData.consignorName} onChange={handleChange} className="input" placeholder="e.g. Acme Corp" required disabled={loading} onFocus={() => formData.consignorName.length >= 2 && consignorSuggestions.length > 0 && setShowConsignorSuggestions(true)} autoComplete="off" />
                         </div>
-                        <div>
+                        <div style={{ position: 'relative' }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>GST Number</label>
-                            <input type="text" name="consignorGst" value={formData.consignorGst} onChange={handleChange} className="input" placeholder="22AAAAA0000A1Z5" />
+                            <input type="text" name="consignorGst" value={formData.consignorGst} onChange={handleChange} className="input" placeholder="22AAAAA0000A1Z5" maxLength={15} onFocus={() => formData.consignorGst.length >= 2 && consignorSuggestions.length > 0 && setShowConsignorSuggestions(true)} autoComplete="off" />
+                            {showConsignorSuggestions && (
+                                <ul style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', marginTop: '0.5rem', maxHeight: '200px', overflowY: 'auto', listStyle: 'none', padding: 0, boxShadow: 'var(--shadow-md)' }}>
+                                    {consignorSuggestions.map((sugg, idx) => (
+                                        <li key={idx} onClick={() => handleSuggestionSelect(sugg, 'consignor')} style={{ padding: '0.75rem 1rem', cursor: 'pointer', borderBottom: idx < consignorSuggestions.length - 1 ? '1px solid var(--border)' : 'none', transition: 'background 0.2s ease' }} onMouseOver={(e) => e.currentTarget.style.background = 'var(--bg-muted)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+                                            <div style={{ fontWeight: 500, color: 'var(--foreground)' }}>{sugg.gstNumber}</div>
+                                            <div style={{ fontSize: '0.9rem', color: 'var(--secondary)' }}>{sugg.name}</div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
                     </div>
                 </div>
 
-                <div className="card glass">
+                <div className="card glass" style={{ overflow: 'visible', zIndex: 51, transform: 'none' }}>
                     <h3 style={{ marginBottom: '1.5rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
                         Consignee Details
                     </h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                        <div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }} ref={consigneeRef}>
+                        <div style={{ position: 'relative' }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>Consignee Name</label>
-                            <input type="text" name="consigneeName" value={formData.consigneeName} onChange={handleChange} className="input" placeholder="e.g. Global Logistics" required />
+                            <input type="text" name="consigneeName" value={formData.consigneeName} onChange={handleChange} className="input" placeholder="e.g. Global Logistics" required onFocus={() => formData.consigneeName.length >= 2 && consigneeSuggestions.length > 0 && setShowConsigneeSuggestions(true)} autoComplete="off" />
                         </div>
-                        <div>
+                        <div style={{ position: 'relative' }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>GST Number</label>
-                            <input type="text" name="consigneeGst" value={formData.consigneeGst} onChange={handleChange} className="input" placeholder="22AAAAA0000A1Z5" />
+                            <input type="text" name="consigneeGst" value={formData.consigneeGst} onChange={handleChange} className="input" placeholder="22AAAAA0000A1Z5" maxLength={15} onFocus={() => formData.consigneeGst.length >= 2 && consigneeSuggestions.length > 0 && setShowConsigneeSuggestions(true)} autoComplete="off" />
+                            {showConsigneeSuggestions && (
+                                <ul style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', marginTop: '0.5rem', maxHeight: '200px', overflowY: 'auto', listStyle: 'none', padding: 0, boxShadow: 'var(--shadow-md)' }}>
+                                    {consigneeSuggestions.map((sugg, idx) => (
+                                        <li key={idx} onClick={() => handleSuggestionSelect(sugg, 'consignee')} style={{ padding: '0.75rem 1rem', cursor: 'pointer', borderBottom: idx < consigneeSuggestions.length - 1 ? '1px solid var(--border)' : 'none', transition: 'background 0.2s ease' }} onMouseOver={(e) => e.currentTarget.style.background = 'var(--bg-muted)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+                                            <div style={{ fontWeight: 500, color: 'var(--foreground)' }}>{sugg.gstNumber}</div>
+                                            <div style={{ fontSize: '0.9rem', color: 'var(--secondary)' }}>{sugg.name}</div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -160,11 +252,11 @@ export default function LRForm() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>From Location</label>
-                        <input type="text" name="fromLocation" value={formData.fromLocation} onChange={handleChange} className="input" placeholder="e.g. Mumbai" required />
+                        <input type="text" name="fromLocation" value={formData.fromLocation} onChange={handleChange} className="input" placeholder="e.g. Mumbai" required readOnly style={{ backgroundColor: 'var(--bg-muted)', cursor: 'not-allowed' }} />
                     </div>
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>To Location</label>
-                        <input type="text" name="toLocation" value={formData.toLocation} onChange={handleChange} className="input" placeholder="e.g. Pune" required />
+                        <input type="text" name="toLocation" value={formData.toLocation} onChange={handleChange} className="input" placeholder="e.g. Pune" required readOnly style={{ backgroundColor: 'var(--bg-muted)', cursor: 'not-allowed' }} />
                     </div>
                     <div style={{ gridColumn: '1 / -1' }}>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>Goods Description</label>
@@ -216,7 +308,7 @@ export default function LRForm() {
                             <span style={{ width: '1rem', height: '1rem', border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', display: 'inline-block' }}></span>
                             Saving...
                         </span>
-                    ) : 'Generate LR'}
+                    ) : (lrId ? 'Update LR' : 'Generate LR')}
                 </button>
             </div>
         </form>
