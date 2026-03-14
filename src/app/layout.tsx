@@ -2,10 +2,16 @@ import type { Metadata } from 'next'
 import './globals.css'
 import Link from 'next/link'
 import { LayoutDashboard, PlusCircle, History, Truck } from 'lucide-react'
+import InstallPrompt from '@/components/InstallPrompt'
 
 export const metadata: Metadata = {
     title: 'KG Transport System - Premium Dashboard',
     description: 'Digital LR Management System',
+    manifest: '/manifest.json',
+}
+
+export const viewport = {
+    themeColor: '#121212',
 }
 
 export default function RootLayout({
@@ -30,6 +36,10 @@ export default function RootLayout({
                             <NavItem href="/create-lr" icon={<PlusCircle size={20} />} label="Create LR" />
                             <NavItem href="/history" icon={<History size={20} />} label="LR History" />
                         </nav>
+
+                        <div style={{ marginTop: 'auto', paddingTop: '2rem', display: 'flex', flexDirection: 'column' }}>
+                            <InstallPrompt />
+                        </div>
                     </aside>
 
                     <main className="main-content">
