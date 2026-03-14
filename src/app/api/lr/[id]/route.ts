@@ -91,3 +91,24 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         return NextResponse.json({ error: 'Failed to update LR' }, { status: 500 });
     }
 }
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    try {
+        const { id } = await params;
+        
+        // Ensure the LR exists before deleting
+        const existingLr = await prisma.lR.findUnique({ where: { id } });
+        if (!existingLr) {
+            return NextResponse.json({ error: 'LR not found' }, { status: 404 });
+        }
+
+        await prisma.lR.delete({
+            where: { id }
+        });
+
+        return NextResponse.json({ message: 'LR deleted successfully' }, { status: 200 });
+    } catch (error) {
+        console.error('Error deleting LR:', error);
+        return NextResponse.json({ error: 'Failed to delete LR' }, { status: 500 });
+    }
+}

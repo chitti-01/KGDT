@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, FileText, Download, Printer, Edit2 } from 'lucide-react'
+import { Search, FileText, Download, Printer, Edit2, Trash2 } from 'lucide-react'
 import { generateLRPdf, generateMultipleLRPdf, generate3LRsPerPagePdf } from '@/utils/pdfGenerator'
 
 type LR = {
@@ -22,6 +22,7 @@ export default function LRHistoryPage() {
     const [startDate, setStartDate] = useState('')
     const [endDate, setEndDate] = useState('')
     const [loading, setLoading] = useState(true)
+    const [isDeleting, setIsDeleting] = useState<number | null>(null)
 
     useEffect(() => {
         fetchLRs()
@@ -44,6 +45,31 @@ export default function LRHistoryPage() {
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault()
         fetchLRs(searchQuery)
+    }
+
+    const handleDelete = async (id: number) => {
+        if (!window.confirm('Are you sure you want to delete this LR permanently? This action cannot be undone.')) {
+            return;
+        }
+
+        setIsDeleting(id);
+        try {
+            const res = await fetch(`/api/lr/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (res.ok) {
+                // Remove LR from UI without reloading page
+                setLrs(lrs.filter(lr => lr.id !== id));
+            } else {
+                alert('Failed to delete LR');
+            }
+        } catch (error) {
+            console.error('Error deleting LR', error);
+            alert('An error occurred while deleting.');
+        } finally {
+            setIsDeleting(null);
+        }
     }
 
     return (
@@ -147,6 +173,29 @@ export default function LRHistoryPage() {
                                                 </button>
                                                 <button onClick={() => generateLRPdf(lr)} className="btn" style={{ background: 'transparent', border: '1px solid var(--border)', padding: '0.5rem 1rem', fontSize: '0.875rem', borderRadius: '2rem', display: 'inline-flex', alignItems: 'center' }}>
                                                     <Printer size={16} style={{ marginRight: '0.5rem' }} /> Print PDF
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleDelete(lr.id)} 
+                                                    disabled={isDeleting === lr.id}
+                                                    className="btn" 
+                                                    style={{ 
+                                                        background: 'transparent', 
+                                                        border: '1px solid #ef4444', 
+                                                        color: '#ef4444', 
+                                                        padding: '0.5rem 1rem', 
+                                                        fontSize: '0.875rem', 
+                                                        borderRadius: '2rem', 
+                                                        display: 'inline-flex', 
+                                                        alignItems: 'center',
+                                                        opacity: isDeleting === lr.id ? 0.5 : 1,
+                                                        cursor: isDeleting === lr.id ? 'not-allowed' : 'pointer'
+                                                    }}>
+                                                    {isDeleting === lr.id ? (
+                                                        <div style={{ width: '16px', height: '16px', border: '2px solid #ef4444', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', marginRight: '0.5rem' }}></div>
+                                                    ) : (
+                                                        <Trash2 size={16} style={{ marginRight: '0.5rem' }} />
+                                                    )}
+                                                    Delete
                                                 </button>
                                             </div>
                                         </td>
