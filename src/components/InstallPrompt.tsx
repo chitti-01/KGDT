@@ -1,32 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Download, RefreshCw } from 'lucide-react';
+import { Download } from 'lucide-react';
 
 export default function InstallPrompt() {
     const [installPrompt, setInstallPrompt] = useState<any>(null);
     const [isInstalled, setIsInstalled] = useState(false);
-    const [updateAvailable, setUpdateAvailable] = useState(false);
 
     useEffect(() => {
-        // Register service worker
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').then((registration) => {
-                console.log('Service Worker registered with scope:', registration.scope);
-
-                // Check for updates
-                registration.addEventListener('updatefound', () => {
-                    const newWorker = registration.installing;
-                    if (newWorker) {
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                setUpdateAvailable(true);
-                            }
-                        });
-                    }
-                });
-            }).catch((error) => {
-                console.error('Service Worker registration failed:', error);
+        // Safe update flow: listen for service worker updates and reload only once
+        if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!refreshing) {
+                    refreshing = true;
+                    window.location.reload();
+                }
             });
         }
 
@@ -55,41 +44,6 @@ export default function InstallPrompt() {
             setInstallPrompt(null);
         }
     };
-
-    const handleUpdate = () => {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistration().then((reg) => {
-                if (reg && reg.waiting) {
-                    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-                }
-            });
-        }
-        window.location.reload();
-    };
-
-    if (updateAvailable) {
-        return (
-            <button 
-                onClick={handleUpdate}
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 1rem',
-                    background: 'var(--primary)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 'var(--radius)',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                    fontWeight: '500'
-                }}
-            >
-                <RefreshCw size={16} />
-                Update App
-            </button>
-        );
-    }
 
     if (!installPrompt || isInstalled) {
         return null; // Don't show if already installed or prompt unavailable
