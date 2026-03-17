@@ -4,10 +4,8 @@ const withSerwist = require('@serwist/next').default({
     reloadOnOnline: true,
 })
 
-/** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
-    turbopack: {}
 }
 
 module.exports = withSerwist(nextConfig)

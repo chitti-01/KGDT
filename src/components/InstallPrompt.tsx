@@ -10,6 +10,12 @@ export default function InstallPrompt() {
     useEffect(() => {
         // Safe update flow: listen for service worker updates and reload only once
         if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').then((registration) => {
+                console.log('Service Worker registered with scope:', registration.scope);
+            }).catch((error) => {
+                console.error('Service Worker registration failed:', error);
+            });
+
             let refreshing = false;
             navigator.serviceWorker.addEventListener('controllerchange', () => {
                 if (!refreshing) {
