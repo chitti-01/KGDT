@@ -11,6 +11,11 @@ coverage
 out/
 build
 
+# serwist / pwa
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+
 # misc
 .DS_Store
 *.pem
