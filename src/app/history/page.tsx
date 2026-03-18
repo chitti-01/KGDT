@@ -149,7 +149,7 @@ export default function LRHistoryPage() {
                             ) : (
                                 lrs.map((lr) => (
                                     <tr key={lr.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s ease' }} className="table-row-hover">
-                                        <td style={{ padding: '1.25rem 1rem', fontWeight: '600', color: 'var(--foreground)' }}>#{lr.lrNumber}</td>
+                                        <td style={{ padding: '1.25rem 1rem', fontWeight: '600', color: 'var(--foreground)' }}>#{String(lr.lrNumber).padStart(4, '0')}</td>
                                         <td style={{ padding: '1.25rem 1rem', color: 'var(--secondary)', fontSize: '0.9rem' }}>{new Date(lr.bookingDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                                         <td style={{ padding: '1.25rem 1rem', fontWeight: '500' }}>{lr.consignor?.name}</td>
                                         <td style={{ padding: '1.25rem 1rem', fontWeight: '500' }}>{lr.consignee?.name}</td>

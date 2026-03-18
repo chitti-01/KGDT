@@ -135,7 +135,7 @@ export default function LRForm({ initialData, lrId }: { initialData?: any, lrId?
                 </div>
                 <div>
                    <h4 style="margin:0; font-weight:600; font-size:1rem;">LR ${lrId ? 'Updated' : 'Created'}</h4>
-                   <p style="margin:0; color:var(--secondary); font-size:0.875rem;">LR Number: <strong>${newLr.lrNumber}</strong> ${lrId ? 'updated' : 'generated'} successfully.</p>
+                   <p style="margin:0; color:var(--secondary); font-size:0.875rem;">LR Number: <strong>${String(newLr.lrNumber).padStart(4, '0')}</strong> ${lrId ? 'updated' : 'generated'} successfully.</p>
                 </div>
             `;
             document.body.appendChild(toast);

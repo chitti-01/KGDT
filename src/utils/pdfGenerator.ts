@@ -26,7 +26,7 @@ export function generateLRPdf(lr: any) {
     // LR Details Section
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
-    doc.text(`LR No: ${lr.lrNumber}`, margin + 5, 52);
+    doc.text(`LR No: ${String(lr.lrNumber).padStart(4, '0')}`, margin + 5, 52);
     doc.text(`Date: ${format(new Date(lr.bookingDate), 'dd-MMM-yyyy')}`, pageWidth - margin - 5, 52, { align: 'right' });
 
     doc.setFont("helvetica", "normal");
@@ -114,7 +114,7 @@ export function generateLRPdf(lr: any) {
     doc.setFont("helvetica", "normal");
     doc.text('For Krishna Godavari Transport', rightCol, 250);
 
-    doc.save(`LR_${lr.lrNumber}_${format(new Date(), 'yyyyMMdd')}.pdf`);
+    doc.save(`LR_${String(lr.lrNumber).padStart(4, '0')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
 }
 
 export function generateMultipleLRPdf(lrs: any[], startDate?: string, endDate?: string) {
@@ -151,7 +151,7 @@ export function generateMultipleLRPdf(lrs: any[], startDate?: string, endDate?: 
 
     // Table Data
     const tableData = filteredLrs.map(lr => [
-        lr.lrNumber || '-',
+        lr.lrNumber ? String(lr.lrNumber).padStart(4, '0') : '-',
         format(new Date(lr.bookingDate), 'dd/MM/yyyy'),
         lr.consignor?.name || '-',
         lr.consignor?.gstNumber || '-',
@@ -275,7 +275,7 @@ export function generate3LRsPerPagePdf(lrs: any[], startDate?: string, endDate?:
         // LR NO
         doc.setFontSize(10);
         doc.setFont("helvetica", "bold");
-        doc.text(`LR NO: ${lr.lrNumber || '-'}`, margin + 3, currentY);
+        doc.text(`LR NO: ${lr.lrNumber ? String(lr.lrNumber).padStart(4, '0') : '-'}`, margin + 3, currentY);
 
         // PAID / TO PAY
         const billingTypeObj: Record<string, string> = {

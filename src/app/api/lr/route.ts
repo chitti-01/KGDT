@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         const lastLr = await prisma.lR.findFirst({
             orderBy: { lrNumber: 'desc' }
         });
-        const nextLrNumber = lastLr ? lastLr.lrNumber + 1 : 1000; // Start at 1000
+        const nextLrNumber = lastLr ? lastLr.lrNumber + 1 : 1; // Start at 1
 
         // Logic: Get or create consignor
         let consignor = await prisma.customer.findUnique({ where: { name: consignorName } });

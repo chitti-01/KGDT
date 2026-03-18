@@ -64,7 +64,7 @@ export default function EditLRPage() {
         <div>
             <header className="header">
                 <div>
-                    <h2 className="title">Edit LR: #{lrData.lrNumber}</h2>
+                    <h2 className="title">Edit LR: #{String(lrData.lrNumber).padStart(4, '0')}</h2>
                     <p className="subtitle">Update details for the selected logistic receipt.</p>
                 </div>
             </header>
