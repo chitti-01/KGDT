@@ -102,9 +102,33 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
             return NextResponse.json({ error: 'LR not found' }, { status: 404 });
         }
 
+        const deletedLrNumber = existingLr.lrNumber;
+
         await prisma.lR.delete({
             where: { id }
         });
+
+        // Fetch all LRs with lrNumber > deletedLrNumber, ordered by lrNumber ASC
+        const lrsToUpdate = await prisma.lR.findMany({
+            where: {
+                lrNumber: {
+                    gt: deletedLrNumber
+                }
+            },
+            orderBy: {
+                lrNumber: 'asc'
+            }
+        });
+
+        // Update them one by one to avoid unique constraint violations
+        for (const lr of lrsToUpdate) {
+            await prisma.lR.update({
+                where: { id: lr.id },
+                data: {
+                    lrNumber: lr.lrNumber - 1
+                }
+            });
+        }
 
         return NextResponse.json({ message: 'LR deleted successfully' }, { status: 200 });
     } catch (error) {
