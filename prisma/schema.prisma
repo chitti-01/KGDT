@@ -23,6 +23,7 @@ model LR {
   toLocation       String
   
   goodsDescription String
+  invoiceNumber    String?
   quantity         Int?
   weight           Float?
   

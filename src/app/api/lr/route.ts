@@ -48,8 +48,8 @@ export async function POST(request: NextRequest) {
             consignorName, consigneeName, // Can be existing ID or new name
             consignorGst, consigneeGst,
             fromLocation, toLocation,
-            goodsDescription, quantity, weight,
-            freightAmount, otherCharges, gstRate
+            goodsDescription, invoiceNumber, quantity, weight,
+            freightAmount
         } = body;
 
         // Logic: Auto-generate LR number
@@ -93,13 +93,7 @@ export async function POST(request: NextRequest) {
 
         // Calculate amounts
         const fAmt = parseFloat(freightAmount) || 0;
-        const oAmt = parseFloat(otherCharges) || 0;
-        const gRate = parseFloat(gstRate) || 0;
-        const taxableAmount = fAmt + oAmt;
-        const totalGst = (taxableAmount * gRate) / 100;
-        const cgst = totalGst / 2;
-        const sgst = totalGst / 2;
-        const totalAmount = taxableAmount + totalGst;
+        const totalAmount = fAmt;
 
         const lr = await prisma.lR.create({
             data: {
@@ -112,13 +106,10 @@ export async function POST(request: NextRequest) {
                 fromLocation,
                 toLocation,
                 goodsDescription,
+                invoiceNumber: invoiceNumber || null,
                 quantity: quantity ? parseInt(quantity, 10) : null,
                 weight: weight ? parseFloat(weight) : null,
                 freightAmount: fAmt,
-                otherCharges: oAmt,
-                gstRate: gRate,
-                cgst: cgst,
-                sgst: sgst,
                 totalAmount: totalAmount
             },
             include: {

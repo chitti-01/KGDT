@@ -30,7 +30,8 @@ export function generateLRPdf(lr: any) {
     doc.text(`Date: ${format(new Date(lr.bookingDate), 'dd-MMM-yyyy')}`, pageWidth - margin - 5, 52, { align: 'right' });
 
     doc.setFont("helvetica", "normal");
-    doc.text(`Billing Type: ${lr.billingType}`, margin + 5, 60);
+    const invNo = lr.invoiceNumber ? ` | Inv No: ${lr.invoiceNumber}` : '';
+    doc.text(`Billing Type: ${lr.billingType}${invNo}`, margin + 5, 60);
     const delivery = lr.deliveryDate ? new Date(lr.deliveryDate) : addDays(new Date(lr.bookingDate), 1);
     doc.text(`Est. Delivery: ${format(delivery, 'dd-MMM-yyyy')}`, pageWidth - margin - 5, 60, { align: 'right' });
 
@@ -93,15 +94,8 @@ export function generateLRPdf(lr: any) {
 
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
-    doc.text('Freight:', rightCol, 190);
-    doc.text(lr.freightAmount?.toFixed(2) || '0.00', rightEdge, 190, { align: 'right' });
-
-    doc.text('Other Charges:', rightCol, 200);
-    doc.text(lr.otherCharges?.toFixed(2) || '0.00', rightEdge, 200, { align: 'right' });
-
-    const totalGst = ((lr.cgst || 0) + (lr.sgst || 0) + (lr.igst || 0));
-    doc.text(`GST (${lr.gstRate || 0}%):`, rightCol, 210);
-    doc.text(totalGst.toFixed(2), rightEdge, 210, { align: 'right' });
+    doc.text('Freight:', rightCol, 210);
+    doc.text(lr.freightAmount?.toFixed(2) || '0.00', rightEdge, 210, { align: 'right' });
 
     doc.line(pageWidth - 90, 220, pageWidth - margin, 220);
 
@@ -275,7 +269,8 @@ export function generate3LRsPerPagePdf(lrs: any[], startDate?: string, endDate?:
         // LR NO
         doc.setFontSize(10);
         doc.setFont("helvetica", "bold");
-        doc.text(`LR NO: ${lr.lrNumber ? String(lr.lrNumber).padStart(4, '0') : '-'}`, margin + 3, currentY);
+        const invStr = lr.invoiceNumber ? ` | INV: ${lr.invoiceNumber}` : '';
+        doc.text(`LR NO: ${lr.lrNumber ? String(lr.lrNumber).padStart(4, '0') : '-'}${invStr}`, margin + 3, currentY);
 
         // PAID / TO PAY
         const billingTypeObj: Record<string, string> = {

@@ -81,11 +81,10 @@ export default function LRForm({ initialData, lrId }: { initialData?: any, lrId?
         fromLocation: 'Vijayawada',
         toLocation: 'Eluru',
         goodsDescription: '',
+        invoiceNumber: '',
         quantity: '',
         weight: '',
         freightAmount: '',
-        otherCharges: '',
-        gstRate: '0',
     })
 
     // Suggestion logic can be expanded. Here we simulate basic handling.
@@ -97,7 +96,10 @@ export default function LRForm({ initialData, lrId }: { initialData?: any, lrId?
             value = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
             fetchSuggestions(value, name === 'consignorGst' ? 'consignor' : 'consignee', 'gst');
         } else if (name === 'consignorName' || name === 'consigneeName') {
+            value = value.toUpperCase();
             fetchSuggestions(value, name === 'consignorName' ? 'consignor' : 'consignee', 'name');
+        } else if (name === 'invoiceNumber') {
+            value = value.toUpperCase();
         }
         setFormData((prev: any) => ({ ...prev, [name]: value }))
     }
@@ -157,15 +159,15 @@ export default function LRForm({ initialData, lrId }: { initialData?: any, lrId?
     }
 
     return (
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '2rem' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem' }}>
 
             {/* Header Info */}
-            <div className="card glass">
-                <h3 style={{ marginBottom: '1.5rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="card glass" style={{ padding: '1rem' }}>
+                <h3 style={{ marginBottom: '0.75rem', fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--primary)', display: 'inline-block' }}></span>
                     General Information
                 </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>Booking Date</label>
                         <input type="date" name="bookingDate" value={formData.bookingDate} onChange={handleChange} className="input" required />
@@ -187,13 +189,13 @@ export default function LRForm({ initialData, lrId }: { initialData?: any, lrId?
             </div>
 
             {/* Customer Info */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem', position: 'relative', zIndex: 50 }}>
-                <div className="card glass" style={{ overflow: 'visible', zIndex: 52, transform: 'none' }}>
-                    <h3 style={{ marginBottom: '1.5rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', position: 'relative', zIndex: 50 }}>
+                <div className="card glass" style={{ padding: '1rem', overflow: 'visible', zIndex: 52, transform: 'none' }}>
+                    <h3 style={{ marginBottom: '0.75rem', fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }}></span>
                         Consignor Details
                     </h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }} ref={consignorRef}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }} ref={consignorRef}>
                         <div style={{ position: 'relative' }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>Consignor Name</label>
                             <input type="text" name="consignorName" value={formData.consignorName} onChange={handleChange} className="input" placeholder="e.g. Acme Corp" required disabled={loading} onFocus={() => formData.consignorName.length >= 2 && consignorSuggestions.length > 0 && setShowConsignorSuggestions(true)} autoComplete="off" />
@@ -215,12 +217,12 @@ export default function LRForm({ initialData, lrId }: { initialData?: any, lrId?
                     </div>
                 </div>
 
-                <div className="card glass" style={{ overflow: 'visible', zIndex: 51, transform: 'none' }}>
-                    <h3 style={{ marginBottom: '1.5rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div className="card glass" style={{ padding: '1rem', overflow: 'visible', zIndex: 51, transform: 'none' }}>
+                    <h3 style={{ marginBottom: '0.75rem', fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
                         Consignee Details
                     </h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }} ref={consigneeRef}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }} ref={consigneeRef}>
                         <div style={{ position: 'relative' }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>Consignee Name</label>
                             <input type="text" name="consigneeName" value={formData.consigneeName} onChange={handleChange} className="input" placeholder="e.g. Global Logistics" required onFocus={() => formData.consigneeName.length >= 2 && consigneeSuggestions.length > 0 && setShowConsigneeSuggestions(true)} autoComplete="off" />
@@ -243,13 +245,13 @@ export default function LRForm({ initialData, lrId }: { initialData?: any, lrId?
                 </div>
             </div>
 
-            {/* Journey & Goods */}
-            <div className="card glass">
-                <h3 style={{ marginBottom: '1.5rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {/* Journey, Goods & Financials */}
+            <div className="card glass" style={{ padding: '1rem' }}>
+                <h3 style={{ marginBottom: '0.75rem', fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }}></span>
-                    Shipment Details
+                    Shipment & Billing Details
                 </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>From Location</label>
                         <input type="text" name="fromLocation" value={formData.fromLocation} onChange={handleChange} className="input" placeholder="e.g. Mumbai" required readOnly style={{ backgroundColor: 'var(--bg-muted)', cursor: 'not-allowed' }} />
@@ -258,44 +260,25 @@ export default function LRForm({ initialData, lrId }: { initialData?: any, lrId?
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>To Location</label>
                         <input type="text" name="toLocation" value={formData.toLocation} onChange={handleChange} className="input" placeholder="e.g. Pune" required readOnly style={{ backgroundColor: 'var(--bg-muted)', cursor: 'not-allowed' }} />
                     </div>
-                    <div style={{ gridColumn: '1 / -1' }}>
+                    <div style={{ gridColumn: 'span 2' }}>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>Goods Description</label>
                         <input type="text" name="goodsDescription" value={formData.goodsDescription} onChange={handleChange} className="input" placeholder="e.g. Electronic Items" required />
                     </div>
                     <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>Invoice No</label>
+                        <input type="text" name="invoiceNumber" value={formData.invoiceNumber} onChange={handleChange} className="input" placeholder="INV12345" />
+                    </div>
+                    <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>Quantity (Pieces)</label>
-                        <input type="number" name="quantity" value={formData.quantity} onChange={handleChange} className="input" placeholder="e.g. 50" min="1" required />
+                        <input type="number" name="quantity" value={formData.quantity} onChange={handleChange} className="input" min="1" required />
                     </div>
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>Weight (Kg)</label>
-                        <input type="number" step="0.01" name="weight" value={formData.weight} onChange={handleChange} className="input" placeholder="e.g. 1500" required />
+                        <input type="number" step="0.01" name="weight" value={formData.weight} onChange={handleChange} className="input" required />
                     </div>
-                </div>
-            </div>
-
-            {/* Financials */}
-            <div className="card glass">
-                <h3 style={{ marginBottom: '1.5rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#8b5cf6', display: 'inline-block' }}></span>
-                    Charges & Billing
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>Freight Amount (₹)</label>
-                        <input type="number" step="0.01" name="freightAmount" value={formData.freightAmount} onChange={handleChange} className="input" placeholder="1000.00" required />
-                    </div>
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>Other Charges (₹)</label>
-                        <input type="number" step="0.01" name="otherCharges" value={formData.otherCharges} onChange={handleChange} className="input" placeholder="100.00" />
-                    </div>
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--secondary)' }}>GST Rate (%)</label>
-                        <select name="gstRate" value={formData.gstRate} onChange={handleChange} className="input">
-                            <option value="0">0%</option>
-                            <option value="5">5%</option>
-                            <option value="12">12%</option>
-                            <option value="18">18%</option>
-                        </select>
+                        <input type="number" step="0.01" name="freightAmount" value={formData.freightAmount} onChange={handleChange} className="input" required />
                     </div>
                 </div>
             </div>

@@ -11,6 +11,7 @@ export function exportLRsToExcel(lrs: any[]) {
         'To': 'Eluru',
         'Est. Delivery': format(addDays(new Date(lr.bookingDate), 1), 'dd-MM-yyyy'),
         'Goods': lr.goodsDescription,
+        'Invoice No': lr.invoiceNumber || '-',
         'Total Amount': lr.totalAmount,
         'Status': lr.status
     }));

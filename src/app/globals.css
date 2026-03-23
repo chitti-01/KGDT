@@ -136,7 +136,7 @@ button,
 
 .input {
   width: 100%;
-  padding: 0.875rem 1.25rem;
+  padding: 0.65rem 1rem;
   border-radius: calc(var(--radius) - 0.25rem);
   border: 1px solid var(--border);
   background: var(--input);
@@ -163,6 +163,16 @@ button,
   opacity: 0.6;
   cursor: not-allowed;
   background: rgba(0, 0, 0, 0.02);
+}
+
+/* Hide number input spinners globally */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield; /* Firefox */
 }
 
 .layout-grid {
