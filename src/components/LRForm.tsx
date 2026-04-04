@@ -100,6 +100,15 @@ export default function LRForm({ initialData, lrId }: { initialData?: any, lrId?
             fetchSuggestions(value, name === 'consignorName' ? 'consignor' : 'consignee', 'name');
         } else if (name === 'invoiceNumber') {
             value = value.toUpperCase();
+        } else if (name === 'bookingDate') {
+            if (value && value.includes('-')) {
+                const parts = value.split('-');
+                if (parts.length === 3) {
+                    const nextDay = addDays(new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])), 1);
+                    setFormData((prev: any) => ({ ...prev, bookingDate: value, deliveryDate: format(nextDay, 'yyyy-MM-dd') }));
+                    return;
+                }
+            }
         }
         setFormData((prev: any) => ({ ...prev, [name]: value }))
     }
