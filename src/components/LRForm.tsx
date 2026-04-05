@@ -72,7 +72,7 @@ export default function LRForm({ initialData, lrId }: { initialData?: any, lrId?
 
     const [formData, setFormData] = useState(initialData || {
         bookingDate: format(new Date(), 'yyyy-MM-dd'),
-        deliveryDate: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
+        deliveryDate: format(addDays(new Date(), new Date().getDay() === 6 ? 2 : 1), 'yyyy-MM-dd'),
         billingType: 'ToPay',
         consignorName: '',
         consignorGst: '',
@@ -104,7 +104,9 @@ export default function LRForm({ initialData, lrId }: { initialData?: any, lrId?
             if (value && value.includes('-')) {
                 const parts = value.split('-');
                 if (parts.length === 3) {
-                    const nextDay = addDays(new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])), 1);
+                    const bookingDateObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                    const isSaturday = bookingDateObj.getDay() === 6;
+                    const nextDay = addDays(bookingDateObj, isSaturday ? 2 : 1);
                     setFormData((prev: any) => ({ ...prev, bookingDate: value, deliveryDate: format(nextDay, 'yyyy-MM-dd') }));
                     return;
                 }
